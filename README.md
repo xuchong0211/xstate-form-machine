@@ -4,3 +4,82 @@ xstate common form machine using yup validations
 
 npm install xstate-form-machine
 
+
+## Super quick start
+
+```bash
+npm install xstate
+```
+
+```js
+
+//validation.js
+import * as yup from "yup";
+
+const phoneRegExp = /^[1][3-8][0-9]{9}$/;
+
+export const nameShape = yup.string().required("请填写名称");
+
+export const phoneShape = yup
+  .string()
+  .length(11, "请输入手机号必须为11位")
+  .required("请输入手机号")
+  .matches(phoneRegExp, "手机号码格式不正确");
+
+export const regionShape = yup.string().required("请填写地址");
+
+export const addressShape = yup.string().required("请填写详细地址");
+
+
+//machine.js
+
+import { assign, Machine } from "xstate";
+import FormMachineBuilder from "xstate-form-machine";
+
+const onSubmit = async context => {
+  const { inputFields, addressId } = context;
+  const { name, phone, address, region, regionCode } = inputFields;
+  //todo
+});
+
+const onSuccess = (...args) => {
+  //todo
+};
+
+const onFail = (...args) => {
+  //todo
+};
+
+const shapes = {
+  name: nameShape,
+  phone: phoneShape,
+  address: addressShape
+};
+
+export default new FormMachineBuilder(
+  "address",
+  { assign, Machine },
+  shapes
+)
+  .setOnSubmit(onSubmit)
+  .setOnSuccess(onSuccess)
+  .setOnFail(onFail)
+  .build();
+
+///
+
+////useMachine
+
+
+  const [current, send] = useMachine(
+    machine.withContext({
+      id,
+      inputFields: {
+        name,
+        phone,
+        address
+      }
+    })
+  );
+
+```
