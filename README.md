@@ -78,4 +78,28 @@ export default new FormMachineBuilder(
     })
   );
 
+  const { context } = current;
+  const { inputFields, inputErrors = {} } = context;
+
+    <View className="container">
+      <InputBox
+        inputFields={inputFields}
+        inputErrors={inputErrors}
+        onChange={({name, phone, address}) => {
+           //send("ONCHANGE", {name, phone, address}) to update inputs
+           send("ONCHANGE", {name, phone, address})
+          }
+        }
+      />
+      <View
+        className="confirmButton"
+        onClick={() => {
+          //send("CONFIRM", to submit
+          send("CONFIRM");
+        }}
+      >
+        <Text className="confirmText">{"保存"}</Text>
+      </View>
+    </View>
+
 ```
