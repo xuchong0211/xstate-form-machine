@@ -50,7 +50,7 @@ export default class FormMachineBuilder {
         idle: {
           on: {
             ONCHANGE: { actions: ["onChange", "verifyOnChange"] },
-            CONFIRM: [
+            SUBMIT: [
               {
                 cond: { type: "confirmValidation" },
                 target: "submit"
