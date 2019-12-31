@@ -24,8 +24,6 @@ export const phoneShape = yup
   .required("请输入手机号")
   .matches(phoneRegExp, "手机号码格式不正确");
 
-export const regionShape = yup.string().required("请填写地址");
-
 export const addressShape = yup.string().required("请填写详细地址");
 
 
@@ -35,8 +33,8 @@ import { assign, Machine } from "xstate";
 import FormMachineBuilder from "xstate-form-machine";
 
 const onSubmit = async context => {
-  const { inputFields, addressId } = context;
-  const { name, phone, address, region, regionCode } = inputFields;
+  const { id, inputFields } = context;
+  const { name, phone, address } = inputFields;
   //todo
 });
 
