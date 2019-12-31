@@ -2,13 +2,11 @@
 
 xstate common form machine using yup validations
 
-npm install xstate-form-machine
-
-
 ## Super quick start
 
 ```bash
 npm install xstate
+npm install xstate-form-machine
 ```
 
 ```js
