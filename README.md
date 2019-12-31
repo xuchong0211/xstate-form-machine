@@ -94,8 +94,8 @@ export default new FormMachineBuilder(
       <View
         className="confirmButton"
         onClick={() => {
-          //send("CONFIRM", to submit
-          send("CONFIRM");
+          //send("SUMBIT", to submit
+          send("SUMBIT");
         }}
       >
         <Text className="confirmText">{"保存"}</Text>
