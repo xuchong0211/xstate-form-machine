@@ -86,8 +86,8 @@ export default new FormMachineBuilder(
         inputFields={inputFields}
         inputErrors={inputErrors}
         onChange={({name, phone, address}) => {
-           //send("ONCHANGE", {name, phone, address}) to update inputs
-           send("ONCHANGE", {name, phone, address})
+           //send("ONCHANGE", {payload: {name, phone, address}}) to update inputs
+           send("ONCHANGE", {payload: {name, phone, address}})
           }
         }
       />
