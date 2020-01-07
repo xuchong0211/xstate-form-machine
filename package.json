@@ -1,6 +1,6 @@
 {
   "name": "xstate-form-machine",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "common form machine",
   "main": "lib/index.js",
   "files": [
@@ -22,7 +22,7 @@
   ],
   "author": "cxu034",
   "license": "MIT",
-  "dependencies": {
+  "peerDependencies": {
     "lodash": "^4.17.15",
     "yup": "^0.28.0"
   },
