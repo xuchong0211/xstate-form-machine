@@ -1,9 +1,11 @@
 import * as yup from "yup";
 import _assign from "lodash/assign";
 import _set from "lodash/set";
-import _each from "lodash/each";
 import _keysIn from "lodash/keysIn";
 import _isFunction from "lodash/isFunction";
+
+const ONCHANGE_ACTION = "ONCHANGE";
+const SUBMIT_ACTION = "SUBMIT";
 
 export default class FormMachineBuilder {
   constructor(id, xstate, shapes) {
@@ -12,24 +14,6 @@ export default class FormMachineBuilder {
     this.assign = xstate.assign;
     this.shapes = shapes;
     this.submitSchema = shapes ? yup.object().shape(shapes) : null;
-  }
-
-  checkValidity(object, validation) {
-    _each(_keysIn(object), key => {
-      const schema = this.getInputSchema(key);
-      if (schema) {
-        schema
-          .validate(object)
-          .then(() => {
-            _set(validation, key, null);
-          })
-          .catch(error => {
-            const { path, message } = error;
-            _set(validation, path, message);
-          });
-      }
-    });
-    return validation;
   }
 
   getInputSchema(key) {
@@ -42,6 +26,24 @@ export default class FormMachineBuilder {
     return null;
   }
 
+  async checkValidity({ shape, validation = {} }) {
+    const keys = _keysIn(shape);
+    for (let i in keys) {
+      const key = keys[i];
+      const schema = this.getInputSchema(key);
+      if (schema) {
+        try {
+          await schema.validate(shape);
+          _set(validation, key, null);
+        } catch (error) {
+          const { path, message } = error;
+          _set(validation, path, message);
+        }
+      }
+    }
+    return { shape, validation };
+  }
+
   getFormConfig() {
     return {
       id: this.id,
@@ -49,14 +51,23 @@ export default class FormMachineBuilder {
       states: {
         idle: {
           on: {
-            ONCHANGE: { actions: ["onChange", "verifyOnChange"] },
-            SUBMIT: [
+            [ONCHANGE_ACTION]: "verify",
+            [SUBMIT_ACTION]: [
               {
                 cond: { type: "confirmValidation" },
                 target: "submit"
               },
-              { actions: "verifyInputs" }
+              { target: "verify" }
             ]
+          }
+        },
+        verify: {
+          invoke: {
+            src: "verify",
+            onDone: {
+              target: "idle",
+              actions: "onChange"
+            }
           }
         },
         submit: {
@@ -79,7 +90,24 @@ export default class FormMachineBuilder {
     };
   }
   services() {
-    return { onSubmit: this.onSubmit };
+    return {
+      onSubmit: this.onSubmit,
+      verify: async (context, event) => {
+        const { inputErrors: validation, inputFields } = context;
+        const { type, payload } = event;
+        const shape =
+            type === ONCHANGE_ACTION
+                ? payload
+                : type === SUBMIT_ACTION
+                ? inputFields
+                : {};
+        const result = await this.checkValidity({
+          shape,
+          validation
+        });
+        return result;
+      }
+    };
   }
   guards() {
     return {
@@ -94,24 +122,15 @@ export default class FormMachineBuilder {
   }
   actions() {
     return {
-      onChange: this.assign({
-        inputFields: (ctx, event) => {
-          const { inputFields } = ctx;
-          const { payload } = event;
-          return _assign(inputFields, payload);
-        }
-      }),
-      verifyOnChange: this.assign({
-        inputErrors: (ctx, event) => {
-          const { inputErrors = {} } = ctx;
-          const { payload } = event;
-          return this.checkValidity(payload, inputErrors);
-        }
-      }),
-      verifyInputs: this.assign({
-        inputErrors: ({ inputFields, inputErrors = {} }) => {
-          return this.checkValidity(inputFields, inputErrors);
-        }
+      onChange: this.assign((context, event) => {
+        const { shape, validation } = event.data;
+        const {
+          inputFields: preInputFields,
+          inputErrors: preInputErrors
+        } = context;
+        const inputFields = _assign(preInputFields || {}, shape);
+        const inputErrors = _assign(preInputErrors || {}, validation);
+        return _assign(context, { inputFields, inputErrors });
       }),
       onSuccess: (...args) => {
         if (_isFunction(this.onSuccess)) {
@@ -144,7 +163,7 @@ export default class FormMachineBuilder {
   build() {
     if (!this.onSubmit) {
       throw new Error(
-        "onSubmit service is undefined in " + this.id + " Form Machine."
+          "onSubmit service is undefined in " + this.id + " Form Machine."
       );
     }
     return this.Machine(this.getFormConfig(), {
